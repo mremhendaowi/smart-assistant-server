@@ -1,5 +1,5 @@
-import express from "express";
-import cors from "cors";
+const express = require("express");
+const cors = require("cors");
 
 const app = express();
 app.use(cors());
@@ -8,13 +8,13 @@ app.use(express.json());
 const PORT = process.env.PORT || 10000;
 const API_KEY = process.env.OPENROUTER_API_KEY;
 
-// ✅ اختبار السيرفر
+// اختبار
 app.get("/", (req, res) => {
   res.send("Server is working");
 });
 
-// ✅ جلب الموديلات
-app.get("/models", async (req, res) => {
+// موديلات
+app.get("/models", (req, res) => {
   if (!API_KEY) {
     return res.status(500).json({
       error: "المفتاح غير موجود في السيرفر"
@@ -27,7 +27,7 @@ app.get("/models", async (req, res) => {
   });
 });
 
-// ✅ المسار الأساسي للتطبيق (مهم)
+// 🔥 المهم (chat)
 app.post("/chat", async (req, res) => {
   const userMessage = req.body.message;
 
@@ -75,7 +75,7 @@ app.post("/chat", async (req, res) => {
   }
 });
 
-// ✅ تشغيل السيرفر
+// تشغيل السيرفر
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log("Server running on port " + PORT);
 });
