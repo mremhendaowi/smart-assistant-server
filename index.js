@@ -6,54 +6,37 @@ app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.PORT || 10000;
-const API_KEY = process.env.OPENROUTER_API_KEY;
+const API_KEY = process.env.GEMINI_API_KEY;
 
-// اختبار
-app.get("/", (req, res) => {
-  res.send("Server is working");
-});
-
-// موديلات
-app.get("/models", (req, res) => {
-  if (!API_KEY) {
-    return res.status(500).json({
-      error: "المفتاح غير موجود في السيرفر"
-    });
-  }
-
-  res.json({
-    status: "success",
-    models: ["mistralai/mistral-7b-instruct"]
-  });
-});
-
-// 🔥 المهم (chat)
 app.post("/chat", async (req, res) => {
   const userMessage = req.body.message;
 
   if (!API_KEY) {
     return res.json({
-      reply: "المفتاح غير موجود في السيرفر"
+      reply: "مفتاح Gemini غير موجود"
     });
   }
 
   try {
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": "Bearer " + API_KEY,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "mistralai/mistral-7b-instruct",
-        messages: [
-          { role: "user", content: userMessage }
-        ]
-      })
-    });
+    const response = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + API_KEY,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [{ text: userMessage }]
+            }
+          ]
+        })
+      }
+    );
 
     const data = await response.json();
-    console.log("OpenRouter:", data);
+    console.log(data);
 
     if (data.error) {
       return res.json({
@@ -62,20 +45,18 @@ app.post("/chat", async (req, res) => {
     }
 
     const reply =
-      data.choices?.[0]?.message?.content ||
+      data.candidates?.[0]?.content?.parts?.[0]?.text ||
       "لا يوجد رد";
 
     res.json({ reply });
 
   } catch (error) {
-    console.log("Server error:", error);
     res.json({
-      reply: "خطأ في الاتصال بالسيرفر"
+      reply: "خطأ في الاتصال"
     });
   }
 });
 
-// تشغيل السيرفر
 app.listen(PORT, "0.0.0.0", () => {
-  console.log("Server running on port " + PORT);
+  console.log("Server running on " + PORT);
 });
