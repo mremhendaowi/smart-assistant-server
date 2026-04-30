@@ -13,21 +13,16 @@ app.post('/chat', async (req, res) => {
   const { message } = req.body;
 
   try {
-    // إجبار المكتبة على استخدام v1 بدلاً من v1beta لمنع خطأ الـ 404
-    const model = genAI.getGenerativeModel(
-      { model: "gemini-1.5-flash" },
-      { apiVersion: 'v1' } 
-    );
+    // استخدمنا الموديل الذي أكده الفحص الخاص بك
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const result = await model.generateContent(message);
-    const response = await result.response;
-    res.json({ reply: response.text() });
-
+    res.json({ reply: result.response.text() });
   } catch (error) {
     console.error("LOG ERROR:", error.message);
-    res.status(500).json({ reply: "حدث خطأ في النظام", details: error.message });
+    res.status(500).json({ error: "فشل السيرفر في الرد", details: error.message });
   }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server is Live on port ${PORT}`));
