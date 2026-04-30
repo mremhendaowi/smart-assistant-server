@@ -1,52 +1,36 @@
 const express = require('express');
-const cors = require('cors');
-
 const app = express();
-app.use(cors());
+
+// 1. قراءة المنفذ من نظام Render أو استخدام 10000 كافتراضي محلياً
+const PORT = process.env.PORT || 10000;
+
 app.use(express.json());
 
-const API_KEY = process.env.API_KEY;
-app.post('/api/chat', async (req, res) => {
+// مثال لنقطة النهاية التي يستعلم عنها تطبيق فلاتر
+app.get('/models', async (req, res) => {
     try {
-        console.log("جاري الاستعلام عن الموديلات المتاحة لمفتاحك...");
+        // تأكد من إضافة API_KEY في إعدادات Render
+        const apiKey = process.env.API_KEY;
         
-        // هذا الرابط سيعيد قائمة كل الموديلات التي يدعمها مفتاحك
-        const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${API_KEY}`;
-        
-        const response = await fetch(listUrl);
-        const data = await response.json();
-
-        if (data.models) {
-            console.log("✅ الموديلات المتاحة لك هي:");
-            data.models.forEach(m => console.log("- " + m.name));
-            
-            // سنحاول الآن استخدام أول موديل يدعم generateContent من القائمة تلقائياً
-            const supportedModel = data.models.find(m => m.supportedGenerationMethods.includes("generateContent"));
-            
-            if (supportedModel) {
-                console.log(`🚀 محاولة الإرسال للموديل المتاح: ${supportedModel.name}`);
-                const chatUrl = `https://generativelanguage.googleapis.com/v1beta/${supportedModel.name}:generateContent?key=${API_KEY}`;
-                
-                const chatRes = await fetch(chatUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: req.body.message }] }] })
-                });
-                
-                const chatData = await chatRes.json();
-                return res.json({ reply: chatData.candidates[0].content.parts[0].text });
-            }
+        if (!apiKey) {
+            console.error("خطأ: API_KEY غير معرف في إعدادات Render");
+            return res.status(500).json({ error: "المفتاح غير موجود على السيرفر" });
         }
-        
-        res.status(500).json({ reply: "لم نجد موديل يدعم توليد المحتوى في حسابك." });
 
+        // هنا تضع منطق جلب الموديلات (مثلاً من Google أو OpenAI)
+        // سأرسل قائمة تجريبية للتأكد من نجاح الاتصال
+        res.json({
+            status: "success",
+            models: ["gemini-1.5-flash", "gemini-1.5-pro"]
+        });
+        
     } catch (error) {
-        console.error("فشل الاختبار:", error);
-        res.status(500).json({ reply: "خطأ في الاتصال." });
+        console.error("Internal Error:", error);
+        res.status(500).json({ error: "فشل في جلب الموديلات" });
     }
 });
 
-const PORT = 3000;
+// 2. الربط (Binding) على 0.0.0.0 ضروري جداً لـ Render
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🔍 سيرفر التشخيص يعمل على المنفذ ${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
 });
